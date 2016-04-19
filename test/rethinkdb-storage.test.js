@@ -6,13 +6,13 @@ var cp     = require('child_process'),
 	moment = require('moment'),
 	storage;
 
-var HOST     = 'ec2-52-90-197-111.compute-1.amazonaws.com',
-	PORT     = 28015,
+var HOST     = 'aws-us-east-1-portal.11.dblayer.com',
+	PORT     = 27456,
 	DATABASE = 'reekoh_db',
 	TABLE    = 'reekoh_table',
-	AUTH_KEY = '',
+	USER     = 'x',
+	PASSWORD = 'opTrKxkoAsCvIqTjeP7ik9Yt-u--h8LXL1w_QnioVNE',
 	ID       = new Date().getTime();
-
 
 var record = {
 	id: ID,
@@ -63,7 +63,8 @@ describe('Storage', function () {
 						port: PORT,
 						database: DATABASE,
 						table: TABLE,
-						auth_key: AUTH_KEY
+						user: USER,
+						password: PASSWORD
 					}
 				}
 			}, function (error) {
@@ -76,10 +77,7 @@ describe('Storage', function () {
 		it('should process the data', function (done) {
 			storage.send({
 				type: 'data',
-				data: [
-					record,
-					record
-				]
+				data: record
 			}, done);
 		});
 	});
@@ -94,7 +92,8 @@ describe('Storage', function () {
 				host: HOST,
 				port: PORT,
 				db: DATABASE,
-				auth_key: AUTH_KEY
+				user: USER,
+				password: PASSWORD
 			};
 
 			r.connect(config, function (err, conn) {
