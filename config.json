@@ -1,37 +1,38 @@
-/* The config.json file is where you specify additional configuration needed by
- * your plugin. The details you specify here will be translated to a form on the
- * UI. The values supplied by the users will then get injected as options on the
- * platform on ready event.
- */
 {
   "host": {
 	"label": "Host",
 	"type": "String",
 	"required": true,
-	"help": "Host(s) for the RethinkDB database."
+	"help": "Host for the RethinkDB Database Server."
   },
   "port": {
 	"label": "Port",
 	"type": "Number",
-	"required": false,
-	"help": "(Optional) Port for the RethinkDB database."
+	"required": true,
+	"help": "Port for the RethinkDB Database Server."
   },
-  "database" : {
+  "database": {
 	"label": "Database Name",
 	"type": "String",
 	"required": true,
-	"help": "Database Name where the Table is located."
+	"help": "Database Name where data will be sent to."
   },
-  "table" : {
-	"label": "Series Name",
+  "table": {
+	"label": "Table Name",
 	"type": "String",
 	"required": true,
-	"help": "Table Name where the data will be saved."
+	"help": "Table Name where the data will be inserted to."
   },
-  "auth_key": {
-	"label": "Tag Keys",
+  "user": {
+	"label": "Username",
 	"type": "String",
 	"required": false,
-	"help": "(Optional) Authentication key used for the database, will be set to blank by default)."
+	"help": "(Optional) Username to use for authentication with the RethinkDB Database."
+  },
+  "password": {
+	"label": "Auth Key/Password",
+	"type": "Password",
+	"required": false,
+	"help": "(Optional) Auth Key/Password to use for authentication with the RethinkDB Database."
   }
 }

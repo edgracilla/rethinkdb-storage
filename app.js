@@ -1,33 +1,23 @@
 'use strict';
 
-var platform = require('./platform'),
-	r = require('rethinkdb'),
+var r             = require('rethinkdb'),
+	isArray       = require('lodash.isarray'),
+	platform      = require('./platform'),
 	isPlainObject = require('lodash.isplainobject'),
-	isArray = require('lodash.isarray'),
-	async = require('async'),
-	tbl, connection;
-
-let sendData = (data) => {
-	r.table(tbl).insert(data).run(connection, function(err, res) {
-		if (err) {
-			console.error('Error inserting record on RethinkDB.', err);
-			platform.handleException(err);
-		} else {
-			platform.log(JSON.stringify({
-				title: 'Record Successfully inserted to RethinkDB.',
-				data: data
-			}));
-		}
-	});
-};
+	tableName, connection;
 
 platform.on('data', function (data) {
-	if(isPlainObject(data)){
-		sendData(data);
-	}
-	else if(isArray(data)){
-		async.each(data, function(datum){
-			sendData(datum);
+	if (isPlainObject(data) || isArray(data)) {
+		r.table(tableName).insert(data).run(connection, (insertError) => {
+			if (insertError) {
+				console.error('Error inserting record on RethinkDB.', insertError);
+				platform.handleException(insertError);
+			} else {
+				platform.log(JSON.stringify({
+					title: 'Record Successfully inserted to RethinkDB.',
+					data: data
+				}));
+			}
 		});
 	}
 	else
@@ -38,7 +28,7 @@ platform.on('data', function (data) {
  * Emitted when the platform shuts down the plugin. The Storage should perform cleanup of the resources on this event.
  */
 platform.once('close', function () {
-	let d = require('domain').create();
+	var d = require('domain').create();
 
 	d.once('error', function (error) {
 		console.error(error);
@@ -48,9 +38,13 @@ platform.once('close', function () {
 	});
 
 	d.run(function () {
-		// TODO: Release all resources and close connections etc.
-		platform.notifyClose(); // Notify the platform that resources have been released.
-		d.exit();
+		connection.close({
+			noreplyWait: false
+		}, (error) => {
+			platform.handleException(error);
+			platform.notifyClose();
+			d.exit();
+		});
 	});
 });
 
@@ -60,26 +54,27 @@ platform.once('close', function () {
  * @param {object} options The options or configuration injected by the platform to the plugin.
  */
 platform.once('ready', function (options) {
+	tableName = options.table;
 
-
-	var config = {
+	r.connect({
 		host: options.host,
 		port: options.port,
 		db: options.database,
-		auth_key: options.auth_key
-	};
-	tbl = options.table;
+		table: options.table,
+		user: options.user,
+		password: options.password
+	}, (connectionError, conn) => {
+		if (connectionError) {
+			console.error('Error connecting to RethinkDB Database Server.', connectionError);
+			platform.handleException(connectionError);
 
-	r.connect(config, function(err, conn) {
-		if (err) {
-			console.error('Error connecting to RethinkDB.', err);
-			platform.handleException(err);
+			return setTimeout(function () {
+				process.exit(1);
+			}, 5000);
 		} else {
 			connection = conn;
 			platform.notifyReady();
 			platform.log('RethinkDB Storage has been initialized.');
 		}
 	});
-
-
 });
