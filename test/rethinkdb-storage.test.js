@@ -6,12 +6,10 @@ var cp     = require('child_process'),
 	moment = require('moment'),
 	storage;
 
-var HOST     = 'aws-us-east-1-portal.11.dblayer.com',
-	PORT     = 27456,
+var HOST     = '52.90.27.251',
+	PORT     = 28015,
 	DATABASE = 'reekoh_db',
 	TABLE    = 'reekoh_table',
-	USER     = 'x',
-	PASSWORD = 'opTrKxkoAsCvIqTjeP7ik9Yt-u--h8LXL1w_QnioVNE',
 	ID       = new Date().getTime();
 
 var record = {
@@ -62,9 +60,7 @@ describe('Storage', function () {
 						host: HOST,
 						port: PORT,
 						database: DATABASE,
-						table: TABLE,
-						user: USER,
-						password: PASSWORD
+						table: TABLE
 					}
 				}
 			}, function (error) {
@@ -88,15 +84,12 @@ describe('Storage', function () {
 
 			var r = require('rethinkdb');
 
-			var config = {
+			r.connect({
 				host: HOST,
 				port: PORT,
 				db: DATABASE,
-				user: USER,
-				password: PASSWORD
-			};
-
-			r.connect(config, function (err, conn) {
+				table: TABLE
+			}, function (err, conn) {
 				r.table(TABLE).filter(r.row('id').eq(ID)).run(conn, function (err, cursor) {
 					if (err) throw err;
 					cursor.toArray(function (err, result) {

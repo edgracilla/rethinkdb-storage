@@ -60,6 +60,7 @@ platform.once('ready', function (options) {
 		host: options.host,
 		port: options.port,
 		db: options.database,
+		table: options.table,
 		user: options.user,
 		password: options.password
 	}, (connectionError, conn) => {

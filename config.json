@@ -11,18 +11,6 @@
 	"required": true,
 	"help": "Port for the RethinkDB Database Server."
   },
-  "user": {
-	"label": "Username",
-	"type": "String",
-	"required": true,
-	"help": "Username to use for authentication with the RethinkDB Database."
-  },
-  "password": {
-	"label": "Password",
-	"type": "Password",
-	"required": true,
-	"help": "Password to use for authentication with the RethinkDB Database."
-  },
   "database": {
 	"label": "Database Name",
 	"type": "String",
@@ -34,5 +22,17 @@
 	"type": "String",
 	"required": true,
 	"help": "Table Name where the data will be inserted to."
+  },
+  "user": {
+	"label": "Username",
+	"type": "String",
+	"required": false,
+	"help": "(Optional) Username to use for authentication with the RethinkDB Database."
+  },
+  "password": {
+	"label": "Auth Key/Password",
+	"type": "Password",
+	"required": false,
+	"help": "(Optional) Auth Key/Password to use for authentication with the RethinkDB Database."
   }
 }
