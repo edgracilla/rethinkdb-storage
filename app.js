@@ -70,7 +70,7 @@ platform.once('ready', function (options) {
 
 			return setTimeout(function () {
 				process.exit(1);
-			}, 2000);
+			}, 5000);
 		} else {
 			connection = conn;
 			platform.notifyReady();
