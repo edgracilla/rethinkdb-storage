@@ -1,80 +1,58 @@
-'use strict';
+'use strict'
 
-var r             = require('rethinkdb'),
-	isArray       = require('lodash.isarray'),
-	platform      = require('./platform'),
-	isPlainObject = require('lodash.isplainobject'),
-	tableName, connection;
+const reekoh = require('reekoh')
+const plugin = new reekoh.plugins.Storage()
 
-platform.on('data', function (data) {
-	if (isPlainObject(data) || isArray(data)) {
-		r.table(tableName).insert(data).run(connection, (insertError) => {
-			if (insertError) {
-				console.error('Error inserting record on RethinkDB.', insertError);
-				platform.handleException(insertError);
-			} else {
-				platform.log(JSON.stringify({
-					title: 'Record Successfully inserted to RethinkDB.',
-					data: data
-				}));
-			}
-		});
-	}
-	else
-		platform.handleException(new Error(`Invalid data received. Data must be a valid Array/JSON Object or a collection of objects. Data: ${data}`));
-});
+const rdb = require('rethinkdb')
+const isPlainObject = require('lodash.isplainobject')
 
-/**
- * Emitted when the platform shuts down the plugin. The Storage should perform cleanup of the resources on this event.
- */
-platform.once('close', function () {
-	var d = require('domain').create();
+let tableName = null
+let connection = null
 
-	d.once('error', function (error) {
-		console.error(error);
-		platform.handleException(error);
-		platform.notifyClose();
-		d.exit();
-	});
+plugin.on('data', (data) => {
+  if (isPlainObject(data) || Array.isArray(data)) {
+    rdb.table(tableName).insert(data).run(connection, (insertError) => {
+      if (insertError) {
+        console.error('Error inserting record on RethinkDB.', insertError)
+        plugin.logException(insertError)
+      } else {
+        plugin.log(JSON.stringify({
+          title: 'Record Successfully inserted to RethinkDB.',
+          data: data
+        }))
+      }
+    })
+  } else {
+    plugin.logException(new Error(`Invalid data received. Data must be a valid Array/JSON Object or a collection of objects. Data: ${data}`))
+  }
+})
 
-	d.run(function () {
-		connection.close({
-			noreplyWait: false
-		}, (error) => {
-			platform.handleException(error);
-			platform.notifyClose();
-			d.exit();
-		});
-	});
-});
+plugin.once('ready', () => {
+  tableName = plugin.config.table
 
-/**
- * Emitted when the platform bootstraps the plugin. The plugin should listen once and execute its init process.
- * Afterwards, platform.notifyReady() should be called to notify the platform that the init process is done.
- * @param {object} options The options or configuration injected by the platform to the plugin.
- */
-platform.once('ready', function (options) {
-	tableName = options.table;
+  let connInfo = {
+    host: plugin.config.host,
+    port: plugin.config.port,
+    db: plugin.config.database,
+    table: plugin.config.table,
+    user: plugin.config.user,
+    password: plugin.config.password
+  }
 
-	r.connect({
-		host: options.host,
-		port: options.port,
-		db: options.database,
-		table: options.table,
-		user: options.user,
-		password: options.password
-	}, (connectionError, conn) => {
-		if (connectionError) {
-			console.error('Error connecting to RethinkDB Database Server.', connectionError);
-			platform.handleException(connectionError);
+  rdb.connect(connInfo, (connectionError, conn) => {
+    if (connectionError) {
+      console.error('Error connecting to RethinkDB Database Server.', connectionError)
+      plugin.logException(connectionError)
 
-			return setTimeout(function () {
-				process.exit(1);
-			}, 5000);
-		} else {
-			connection = conn;
-			platform.notifyReady();
-			platform.log('RethinkDB Storage has been initialized.');
-		}
-	});
-});
+      return setTimeout(function () {
+        process.exit(1)
+      }, 5000)
+    } else {
+      connection = conn
+      plugin.log('RethinkDB Storage has been initialized.')
+      plugin.emit('init')
+    }
+  })
+})
+
+module.exports = plugin
