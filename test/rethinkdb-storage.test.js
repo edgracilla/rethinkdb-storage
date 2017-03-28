@@ -5,13 +5,13 @@ const amqp = require('amqplib')
 const moment = require('moment')
 const should = require('should')
 
+const ID = new Date().getTime()
+const INPUT_PIPE = 'demo.pipe.storage'
+const BROKER = 'amqp://guest:guest@127.0.0.1/'
+
 let _app = null
 let _conn = null
 let _channel = null
-
-let ID = new Date().getTime()
-const INPUT_PIPE = 'demo.pipe.storage'
-const BROKER = 'amqp://guest:guest@127.0.0.1/'
 
 let conf = {
   host: 'localhost',
@@ -32,8 +32,7 @@ let record = {
   is_normal: 'true'
 }
 
-describe('PostgreSQL Storage', function () {
-  this.slow(5000)
+describe('RethinkDB Storage', function () {
 
   before('init', () => {
     process.env.BROKER = BROKER
@@ -50,9 +49,8 @@ describe('PostgreSQL Storage', function () {
     })
   })
 
-  after('terminate child process', function (done) {
+  after('terminate', function () {
     _conn.close()
-    done()
   })
 
   describe('#start', function () {
@@ -65,9 +63,9 @@ describe('PostgreSQL Storage', function () {
 
   describe('#data', function () {
     it('should process the data', function (done) {
-      this.timeout(15000)
-      _channel.sendToQueue(INPUT_PIPE, new Buffer(JSON.stringify(record)))
-      setTimeout(done, 10000)
+      if(_channel.sendToQueue(INPUT_PIPE, new Buffer(JSON.stringify(record)))) {
+        done()
+      }
     })
   })
 
